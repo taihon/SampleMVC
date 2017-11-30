@@ -13,6 +13,7 @@ using Microsoft.Extensions.Options;
 using SampleMVC.Models;
 using SampleMVC.Models.ManageViewModels;
 using SampleMVC.Services;
+using SampleMVC.DB.Models;
 
 namespace SampleMVC.Controllers
 {
