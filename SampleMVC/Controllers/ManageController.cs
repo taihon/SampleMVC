@@ -14,6 +14,7 @@ using SampleMVC.Models;
 using SampleMVC.Models.ManageViewModels;
 using SampleMVC.Services;
 using SampleMVC.DB.Models;
+using SampleMVC.Extensions;
 
 namespace SampleMVC.Controllers
 {
@@ -24,6 +25,7 @@ namespace SampleMVC.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly IEmailSender _emailSender;
+        private readonly ISmsSender _smsSender;
         private readonly ILogger _logger;
         private readonly UrlEncoder _urlEncoder;
 
@@ -33,6 +35,7 @@ namespace SampleMVC.Controllers
           UserManager<ApplicationUser> userManager,
           SignInManager<ApplicationUser> signInManager,
           IEmailSender emailSender,
+          ISmsSender smsSender,
           ILogger<ManageController> logger,
           UrlEncoder urlEncoder)
         {
@@ -41,6 +44,7 @@ namespace SampleMVC.Controllers
             _emailSender = emailSender;
             _logger = logger;
             _urlEncoder = urlEncoder;
+            _smsSender = smsSender;
         }
 
         [TempData]
@@ -61,6 +65,7 @@ namespace SampleMVC.Controllers
                 Email = user.Email,
                 PhoneNumber = user.PhoneNumber,
                 IsEmailConfirmed = user.EmailConfirmed,
+                IsPhoneNumberConfirmed = user.PhoneNumberConfirmed,
                 StatusMessage = StatusMessage
             };
 
@@ -128,6 +133,55 @@ namespace SampleMVC.Controllers
 
             StatusMessage = "Verification email sent. Please check your email.";
             return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<ActionResult> SendVerificationSms(IndexViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return RedirectToAction(nameof(Index));
+            }
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                throw new ApplicationException($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
+            }
+            string code = await _userManager.GenerateChangePhoneNumberTokenAsync(user,model.PhoneNumber);
+            await _smsSender.SendVerificationCode(model.PhoneNumber, code);
+            return RedirectToAction(nameof(VerifyNumber));
+        }
+        [HttpGet]
+        public async Task<IActionResult> VerifyNumber()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> VerifyNumber(VerifyNumberModel model)
+        {
+            if (!ModelState.IsValid)
+                return View(model);
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                throw new ApplicationException($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
+            }
+            var result = await _userManager.ChangePhoneNumberAsync(user, 
+                user.PhoneNumber, model.Code);
+            if (result.Succeeded)
+            {
+                StatusMessage = "Phone number is confirmed.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            foreach(var error in result.Errors)
+            {
+                ModelState.AddModelError("Code", error.Description);
+            }
+            return View(model);
         }
 
         [HttpGet]

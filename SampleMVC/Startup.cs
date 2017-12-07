@@ -34,7 +34,7 @@ namespace SampleMVC
 
             // Add application services.
             services.AddTransient<IEmailSender, EmailSender>();
-
+            services.AddTransient<ISmsSender, SmscRuSender>();
             services
                 .AddAuthentication()
                 .AddGoogle(

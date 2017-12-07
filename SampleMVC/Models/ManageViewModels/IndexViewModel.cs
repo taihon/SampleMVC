@@ -19,7 +19,7 @@ namespace SampleMVC.Models.ManageViewModels
         [Phone]
         [Display(Name = "Phone number")]
         public string PhoneNumber { get; set; }
-
+        public bool IsPhoneNumberConfirmed { get; set; }
         public string StatusMessage { get; set; }
     }
 }
