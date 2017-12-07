@@ -11,9 +11,10 @@ using System;
 namespace SampleMVC.DB.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20171130123834_MakeNameRequired")]
+    partial class MakeNameRequired
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -189,13 +190,9 @@ namespace SampleMVC.DB.Migrations
                     b.Property<string>("Name")
                         .IsRequired();
 
-                    b.Property<string>("OwnerId");
-
                     b.Property<DateTime>("ReleaseDate");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("OwnerId");
 
                     b.ToTable("Movies");
                 });
@@ -243,13 +240,6 @@ namespace SampleMVC.DB.Migrations
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade);
-                });
-
-            modelBuilder.Entity("SampleMVC.DB.Models.Movie", b =>
-                {
-                    b.HasOne("SampleMVC.DB.Models.ApplicationUser", "Owner")
-                        .WithMany()
-                        .HasForeignKey("OwnerId");
                 });
 #pragma warning restore 612, 618
         }

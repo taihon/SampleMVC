@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using SampleMvc.Extensions;
 using SampleMVC.DB;
 using SampleMVC.DB.Models;
 using SampleMVC.Models;
@@ -28,10 +29,29 @@ namespace SampleMVC
 
             services.AddIdentity<ApplicationUser, IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()
-                .AddDefaultTokenProviders();
+                .AddDefaultTokenProviders()
+                ;
 
             // Add application services.
             services.AddTransient<IEmailSender, EmailSender>();
+
+            services
+                .AddAuthentication()
+                .AddGoogle(
+                    options =>
+                    {
+                        options.ClientId = Configuration["OAuth:Google:ClientId"];
+                        options.ClientSecret = Configuration["OAuth:Google:ClientSecret"];
+                    }
+                )
+                .AddGithub(
+                    options =>
+                    {
+                        options.ClientId = Configuration["OAuth:GitHub:ClientId"];
+                        options.ClientSecret = Configuration["OAuth:GitHub:ClientSecret"];
+                    }
+                )
+                ;
 
             services.AddMvc();
         }
